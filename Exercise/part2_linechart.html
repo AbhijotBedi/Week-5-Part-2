@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Activity 4 - Part 2</title>
+    <script src="../libs/d3/d3.js"></script>
+    <style>
+        body{
+            font-family: sans-serif;
+        }
+        h1, h3{
+            text-align: center;
+        }
+        svg{
+            width: 60vw;
+            height: 60vh;
+            background-color: #f5f5f5;
+            margin: auto;
+            display: block;
+            border: black;
+        }
+        .estline{
+            stroke: red;
+            stroke-width: 3px;
+            fill: none;
+        }
+        .actline{
+            stroke: blue;
+            stroke-width: 3px;
+            fill: none;
+        }
+        .mopline{
+            stroke: green;
+            stroke-width: 3px;
+            fill: none;
+        }
+        .Legendmop{
+            fill:green;
+        }
+        .Legendest
+        {
+            fill:red;
+        }
+        .Legendact
+        {
+            fill:blue;
+        }
+        
+    </style>
+</head>
+
+<body>   
+
+    <h1>Data Visualization - Activity 4</h1>
+    <h3>Part 1</h3>
+
+    <div style="width: 80%"></div>
+    <script>
+        // step 1 read the database
+        const data = d3.csv("data_sample.csv").then(data=>{
+            // step 2 get the data 
+            let rec_data = data.map(d=>{
+                return {date: new Date(d["date"]),
+                        EstimatedCost: d["EstimatedCost"]*1,
+                        RawMaterial: d["RawMaterial"]*1,
+                        Workmanship: d["Workmanship"]*1,
+                        YearlyStorage: d["YearlyStorage"]*1,
+                        ActualCost: d["RawMaterial"]*1 + d["Workmanship"]*1 + d["YearlyStorage"]*1,
+                        SoldPrice: (d["EstimatedCost"]*1.1).toFixed(2),
+                        MarginOfProfit: ((d["EstimatedCost"]*1.1) - (d["RawMaterial"]*1 + d["Workmanship"]*1 + d["YearlyStorage"]*1)).toFixed(2)
+                        }
+            })
+            console.log(rec_data)
+
+        
+            // step 3 svg element
+            let margins = {
+            top: 30,
+            bottom: 40,
+            left: 60,
+            right:30
+            }
+
+            let svg = d3.select("body").append("svg")
+            const height= 800;
+            const width = 1000;
+            svg.attr("viewBox",`0 0 ${width} ${height}`)
+
+
+            // step 4 make the X and Y Scale
+            let date_min_max = d3.extent(rec_data, d=>d.date)
+            let mop_min = d3.min(rec_data, d=>Number(d.MarginOfProfit))
+            let sold_max = d3.max(rec_data, d=>Number(d.SoldPrice))
+            let min_max = [mop_min-200,sold_max];
+            // scale time date
+            let xScale = d3.scaleTime()
+                            .domain(date_min_max)
+                            .range([margins.left,1000-margins.right]);
+            // scale of price type values
+            let yScale = d3.scaleLinear()
+                            .domain(min_max)
+                            .range([800-margins.bottom,margins.top]);
+            
+
+            // step 5 make the line generator
+            let estline = d3.line()
+                            .x(function(d){
+                                return xScale(d.date);
+                            })                
+                            .y(function(d){
+                                return yScale(d.EstimatedCost);
+                            })
+
+            let actline = d3.line()
+                            .x(function(d){
+                                return xScale(d.date);
+                            })                
+                            .y(function(d){
+                                return yScale(d.ActualCost);
+                            })
+
+            let mopline = d3.line()
+                            .x(function(d){
+                                return xScale(d.date);
+                            })                
+                            .y(function(d){
+                                return yScale(Number(d.MarginOfProfit));
+                            })
+                        
+
+            // step 6 add path element to the svg
+            svg.append("path")
+                .data([rec_data])
+                .attr("class","estline")
+                .attr("d",estline)
+            
+            svg.append("path")
+                .data([rec_data])
+                .attr("class","actline")
+                .attr("d",actline)
+            
+            svg.append("path")
+                .data([rec_data])
+                .attr("class","mopline")
+                .attr("d",mopline)
+
+            
+            // step 7 add the axis
+            const xAxis = d3.axisBottom().scale(xScale);
+            const yAxis = d3.axisLeft().scale(yScale);
+
+            svg.append("g").attr("transform",
+                    `translate(0, ${800-margins.bottom})`)
+                    .call(xAxis)
+                    .style("font-size","11")
+            svg.append("g").attr("transform",
+                    `translate(${margins.left},0)`)
+                    .call(yAxis)
+                    .style("font-size","11")
+        
+            // step 8 styling and creating legends
+            const legend = svg.append('g')
+                .attr("class","legend")
+                .attr("transform","translate(0,50)")
+                .selectAll()
+                .data([{name:"Estimated Cost",class:"Legendest"},
+                    {name:"Actual Cost",class:"Legendact"},
+                    {name:"Margin of Profit",class:"Legendmop"}])
+                .enter()
+                .append("g")
+                .attr("class",d=>d.class)
+                .attr("transform",(d,i)=>{
+                    return `translate(${1000/1.3},${i*20})`
+                })
+
+            legend.append("rect")
+                .attr('width',"10px")
+                .attr('height',"10px")
+            legend.append("text")
+                .text(d=>d.name)
+                .attr("dx","20px")
+                .attr("dy","10px")
+            
+
+        })
+
+    </script>
+</body>
+</html>

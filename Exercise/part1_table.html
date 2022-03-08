@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DV-Activity 4-Part 1</title>
+    <style>
+        body{
+            font-family: sans-serif;
+        }
+        td, th{
+            padding: 4px 16px;
+            text-align: center;
+        }
+        tr:nth-child(odd){
+            background: lightgray;
+        }
+    </style>
+    <script src="../libs/d3/d3.min.js"></script>
+
+</head>
+<body>
+    <h1>Data Visualization - Activity 4</h1>
+    <h3>Part 1</h3>
+
+    <div class="main-div">
+        <script>
+            const data = d3.csv("data_sample.csv").then(data=>{
+                // reading data out of the csv and generating new columns
+                let rec_data = data.map(d=>{
+                    return {
+                        Date: d["date"],
+                        EstimatedCost: d["EstimatedCost"]*1,
+                        RawMaterial: d["RawMaterial"]*1,
+                        Workmanship: d["Workmanship"]*1,
+                        YearlyStorage: d["YearlyStorage"]*1,
+                        ActualCost: d["RawMaterial"]*1 + d["Workmanship"]*1 + d["YearlyStorage"]*1,
+                        SoldPrice: (d["EstimatedCost"]*1.1).toFixed(2),
+                        MarginOfProfit: ((d["EstimatedCost"]*1.1) - (d["RawMaterial"]*1 + d["Workmanship"]*1 + d["YearlyStorage"]*1)).toFixed(2)
+                    }
+                })
+                // console.log(rec_data)
+
+                // generating table
+                function new_table(data, columns) {
+                    var table = d3.select('body').append('table')
+                    var thead = table.append('thead')
+                    var	tbody = table.append('tbody');
+
+                    // add headers
+                    thead.append('tr')
+                    .selectAll('th')
+                    .data(columns).enter()
+                    .append('th')
+                    .text(function (column) { return column; });
+
+                    // add rows
+                    var rows = tbody.selectAll('tr')
+                    .data(data)
+                    .enter()
+                    .append('tr');
+
+                    // add in body row cells 
+                    var cells = rows.selectAll('td')
+                    .data(function (row) {
+                        return columns.map(function (column) {
+                        return {column: column, value: row[column]};
+                        });
+                    })
+                    .enter()
+                    .append('td')
+                    .text(function (d) { return d.value; });
+
+                    return table;
+                }
+
+                new_table(rec_data,['Date','EstimatedCost','RawMaterial','Workmanship','YearlyStorage','ActualCost','SoldPrice','MarginOfProfit'])
+            })  
+        </script>
+    </div>
+</body>
+</html>
